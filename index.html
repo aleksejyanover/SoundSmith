@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SoundSmith — создавай свою музыку</title>
+  <meta name="description" content="SoundSmith — бесплатный браузерный музыкальный конструктор: пианино, секвенсор мелодий, драм-машина и экспорт песни в WAV.">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎹</text></svg>">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">🎹</span>
+      <div>
+        <h1>SoundSmith</h1>
+        <p class="tagline">кузница твоих песен</p>
+      </div>
+    </div>
+
+    <div class="transport">
+      <button id="btnPlay" class="btn btn-play" title="Воспроизвести песню (пробел)">▶ Играть</button>
+      <button id="btnStop" class="btn btn-stop" title="Остановить">■ Стоп</button>
+      <div class="bpm-box">
+        <label for="bpm">Темп</label>
+        <input type="number" id="bpm" min="60" max="200" value="100">
+        <span class="bpm-unit">BPM</span>
+      </div>
+      <div class="position" id="position">—</div>
+    </div>
+
+    <div class="top-right">
+      <input type="text" id="songName" class="song-name" value="Моя первая песня" spellcheck="false" aria-label="Название песни">
+      <div class="status" id="audioStatus">кликни, чтобы включить звук</div>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="piano">🎹 Пианино</button>
+    <button class="tab" data-tab="melody">🎼 Мелодия</button>
+    <button class="tab" data-tab="drums">🥁 Барабаны</button>
+    <button class="tab" data-tab="song">🎵 Песня</button>
+  </nav>
+
+  <main>
+    <!-- ============ PIANO ============ -->
+    <section class="panel active" id="tab-piano">
+      <div class="panel-head">
+        <h2>Играй вживую</h2>
+        <p>Мышкой по клавишам или с клавиатуры: <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> <kbd>F</kbd> — ноты, чёрные — <kbd>W</kbd> <kbd>E</kbd> <kbd>T</kbd> <kbd>Y</kbd> <kbd>U</kbd>.</p>
+      </div>
+
+      <div class="synth-controls">
+        <label>Тимбр:
+          <select id="waveform">
+            <option value="sawtooth">Пила (громкий)</option>
+            <option value="square">Квадрат (ретро)</option>
+            <option value="triangle">Треугольник (мягкий)</option>
+            <option value="sine">Синус (чистый)</option>
+          </select>
+        </label>
+        <label class="check"><input type="checkbox" id="pianoEcho" checked> Эхо</label>
+        <button class="btn btn-ghost" id="btnArpeggio">▶ Сыграть мотив</button>
+      </div>
+
+      <div class="piano" id="piano"></div>
+    </section>
+
+    <!-- ============ MELODY ============ -->
+    <section class="panel" id="tab-melody">
+      <div class="panel-head">
+        <h2>Конструктор мелодии</h2>
+        <p>Рисуй ноты кликами по сетке — 16 шагов (1 такт), 15 нот. Сетка принадлежит выбранной секции песни.</p>
+      </div>
+
+      <div class="section-picker" id="melodySectionPicker"></div>
+
+      <div class="melody-wrap">
+        <div class="note-labels" id="noteLabels"></div>
+        <div class="grid" id="melodyGrid"></div>
+      </div>
+
+      <div class="panel-actions">
+        <button class="btn btn-ghost" data-clear="melody">Очистить мелодию</button>
+        <button class="btn btn-ghost" data-template="melody">✨ Пример мотива</button>
+      </div>
+    </section>
+
+    <!-- ============ DRUMS ============ -->
+    <section class="panel" id="tab-drums">
+      <div class="panel-head">
+        <h2>Драм-машина</h2>
+        <p>Бочка, малый, хэт и хлопок на 16 шагов. Слушай вживую — просто включай и выключай ячейки.</p>
+      </div>
+
+      <div class="section-picker" id="drumSectionPicker"></div>
+
+      <div class="melody-wrap">
+        <div class="note-labels drum-labels" id="drumLabels"></div>
+        <div class="grid drum-grid" id="drumGrid"></div>
+      </div>
+
+      <div class="panel-actions">
+        <button class="btn btn-ghost" data-clear="drums">Очистить ритм</button>
+        <button class="btn btn-ghost" data-template="drums">✨ Классический бит</button>
+      </div>
+    </section>
+
+    <!-- ============ SONG ============ -->
+    <section class="panel" id="tab-song">
+      <div class="song-layout">
+        <div class="card">
+          <h2>Структура песни</h2>
+          <p class="hint">Секции играют сверху вниз и зацикливаются.</p>
+          <ol class="arrangement" id="arrangement"></ol>
+          <div class="row">
+            <button class="btn" id="btnAddSection">+ Добавить секцию</button>
+            <button class="btn btn-ghost" id="btnDuplicate">Копия текущей</button>
+          </div>
+          <div class="row rename-row">
+            <input type="text" id="sectionName" spellcheck="false" aria-label="Название секции">
+            <button class="btn btn-ghost" id="btnRename">Переименовать</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Микшер</h2>
+          <div class="mixer">
+            <label>🎼 Мелодия <input type="range" id="mixMelody" min="0" max="100" value="80"><span id="valMelody">80</span></label>
+            <label>🥁 Барабаны <input type="range" id="mixDrums" min="0" max="100" value="85"><span id="valDrums">85</span></label>
+            <label>🎹 Пианино <input type="range" id="mixPiano" min="0" max="100" value="90"><span id="valPiano">90</span></label>
+            <label>🌫 Эхо <input type="range" id="mixDelay" min="0" max="100" value="25"><span id="valDelay">25</span></label>
+            <label>🔊 Общая <input type="range" id="mixMaster" min="0" max="100" value="90"><span id="valMaster">90</span></label>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Сохранить песню</h2>
+          <p class="hint">Скачай свой трек файлом WAV или сохрани в браузере.</p>
+          <div class="row">
+            <button class="btn btn-export" id="btnExport">⬇ Скачать WAV</button>
+          </div>
+          <div class="row">
+            <button class="btn btn-ghost" id="btnSave">💾 Сохранить</button>
+            <button class="btn btn-ghost" id="btnLoad">📂 Загрузить</button>
+            <button class="btn btn-ghost" id="btnReset">🧹 Сбросить</button>
+          </div>
+          <p class="hint" id="saveStatus">изменения сохраняются автоматически</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>SoundSmith — делай музыку прямо в браузере. Без регистрации, бесплатно.</span>
+  </footer>
+
+  <script src="js/audio.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

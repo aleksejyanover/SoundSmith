@@ -113,6 +113,19 @@ html, body {
 }
 
 .top-right { margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.account-chip {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: border-color .15s, color .15s;
+}
+.account-chip:hover { border-color: var(--accent); color: var(--text); }
+.account-chip.logged { color: var(--text); border-color: var(--accent2); }
 .song-name {
   background: transparent;
   border: 1px dashed var(--line);
@@ -375,6 +388,86 @@ input[type="range"]::-moz-range-thumb {
   background: #fff;
   border: 2px solid var(--accent);
 }
+
+/* ---------- Talking / AI ---------- */
+.ai-layout {
+  display: grid;
+  grid-template-columns: minmax(320px, 1.6fr) minmax(260px, 1fr);
+  gap: 18px;
+}
+@media (max-width: 820px) { .ai-layout { grid-template-columns: 1fr; } }
+
+.chat {
+  height: 340px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 4px 10px 0;
+  margin-bottom: 12px;
+  scrollbar-width: thin;
+}
+.msg {
+  max-width: 85%;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.msg.bot {
+  background: var(--card2);
+  border: 1px solid var(--line);
+  border-bottom-left-radius: 4px;
+  align-self: flex-start;
+}
+.msg.me {
+  background: linear-gradient(135deg, rgba(124, 92, 255, .35), rgba(255, 77, 141, .25));
+  border: 1px solid var(--accent);
+  border-bottom-right-radius: 4px;
+  align-self: flex-end;
+}
+
+.chat-input { display: flex; gap: 8px; }
+.chat-input input {
+  flex: 1;
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--text);
+  padding: 10px 12px;
+  font-size: 14px;
+}
+.chat-input input:focus { outline: none; border-color: var(--accent2); }
+.mic.rec { border-color: var(--hot); color: var(--hot); animation: pulse 1s infinite; }
+@keyframes pulse { 50% { box-shadow: 0 0 14px rgba(255, 77, 141, .7); } }
+
+.quick { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+
+.ai-balance {
+  font-size: 22px;
+  margin: 6px 0 4px;
+}
+.ai-balance small { font-size: 12px; color: var(--muted); }
+
+/* ---------- аккаунты ---------- */
+.acc-form { display: flex; flex-direction: column; gap: 10px; }
+.acc-form input {
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--text);
+  padding: 11px 12px;
+  font-size: 15px;
+}
+.acc-form input:focus { outline: none; border-color: var(--accent2); }
+.acc-tokens { font-size: 26px; margin: 8px 0 14px; }
+.acc-tokens span { font-size: 14px; color: var(--muted); }
+.acc-perks { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: var(--muted); }
+.acc-perks b { color: var(--text); }
+.hint.err { color: var(--danger); }
+.btn.danger:hover { border-color: var(--danger); color: var(--danger); }
+.btn[disabled] { opacity: .55; cursor: default; transform: none; }
+.acc-card { max-width: 480px; }
 
 .footer {
   padding: 18px 22px 30px;

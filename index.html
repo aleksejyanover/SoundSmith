@@ -30,6 +30,7 @@
     </div>
 
     <div class="top-right">
+      <button class="account-chip" id="accountChip">👤 гость · 🪙 0</button>
       <input type="text" id="songName" class="song-name" value="Моя первая песня" spellcheck="false" aria-label="Название песни">
       <div class="status" id="audioStatus">кликни, чтобы включить звук</div>
     </div>
@@ -40,6 +41,8 @@
     <button class="tab" data-tab="melody">🎼 Мелодия</button>
     <button class="tab" data-tab="drums">🥁 Барабаны</button>
     <button class="tab" data-tab="song">🎵 Песня</button>
+    <button class="tab" data-tab="talking">🤖 Talking</button>
+    <button class="tab" data-tab="account">👤 Аккаунт</button>
   </nav>
 
   <main>
@@ -149,6 +152,49 @@
         </div>
       </div>
     </section>
+    <!-- ============ TALKING (AI) ============ -->
+    <section class="panel" id="tab-talking">
+      <div class="panel-head">
+        <h2>🤖 Talking — твой ИИ-музыкант</h2>
+        <p>Напиши или скажи голосом, что сделать: «сделай лоу-фай припев», «поп-песня в тональности соль», «эдэм бит». За генерацию тратятся Talking.</p>
+      </div>
+
+      <div class="ai-layout">
+        <div class="card chat-card">
+          <div class="chat" id="chatLog"></div>
+          <div class="chat-input">
+            <button class="btn btn-ghost mic" id="btnVoice" title="Говори — я запишу">🎙</button>
+            <input type="text" id="chatInput" placeholder="Например: сделай рок-куплет в ре-миноре" spellcheck="false">
+            <button class="btn btn-export" id="btnSend">Отправить</button>
+          </div>
+          <div class="quick">
+            <button class="chip" data-quick="Сделай целую песню в стиле поп">✨ Целая песня</button>
+            <button class="chip" data-quick="Сделай куплет в лоу-фай">🎼 Куплет</button>
+            <button class="chip" data-quick="Сделай EDM бит">🥁 Бит</button>
+            <button class="chip" data-quick="Сделай чилл мелодию">🎵 Мелодия</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>🪙 Talking</h2>
+          <div class="ai-balance" id="aiBalance">—</div>
+          <p class="hint">Цены: целая песня — 20, секция — 10, мелодия — 8, бит — 5. Экспорт WAV приносит +5.</p>
+          <div class="row">
+            <button class="btn btn-export" id="btnBonusAi">🎁 Бонус +25</button>
+          </div>
+          <p class="hint">Бонус раз в сутки, доступен с аккаунтом.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ACCOUNT ============ -->
+    <section class="panel" id="tab-account">
+      <div class="panel-head">
+        <h2>👤 Аккаунты</h2>
+        <p>Зайди под разным ником — у каждого аккаунта свои Talking и своя песня.</p>
+      </div>
+      <div class="song-layout" id="accountBox"></div>
+    </section>
   </main>
 
   <footer class="footer">
@@ -156,6 +202,9 @@
   </footer>
 
   <script src="js/audio.js"></script>
+  <script src="js/accounts.js"></script>
+  <script src="js/ai.js"></script>
+  <script src="js/account-ui.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

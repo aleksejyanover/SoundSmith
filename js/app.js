@@ -12,8 +12,6 @@ const DRUM_FULL = DRUM_TEMPLATE.concat([[0,10],[3,14]]);
 const MOTIF_A = [[14,0],[12,2],[10,4],[12,6],[7,8],[9,10],[10,12],[14,14]];
 const MOTIF_B = [[7,0],[9,2],[10,4],[12,6],[7,8],[10,10],[9,12],[5,14]];
 
-const SAVE_KEY = "soundsmith-song-v1";
-
 /* --- состояние --- */
 let idSeq = 0;
 const zeros = (r, c) => Array.from({ length: r }, () => Array(c).fill(false));
@@ -41,15 +39,20 @@ function defaultState() {
   };
 }
 
-let state = loadState() || defaultState();
-// подстраховка: корректность загруженного
-if (!state.sections || !state.sections.length) state = defaultState();
-if (!state.mix) state.mix = defaultState().mix;
-if (!state.sections.some(s => s.id === state.currentId)) state.currentId = state.sections[0].id;
-state.sections.forEach(s => {
-  const n = parseInt(String(s.id).replace("sec", ""), 10);
-  if (n > idSeq) idSeq = n;
-});
+function normalizeState(s) {
+  if (!s || !s.sections || !s.sections.length) return defaultState();
+  if (!s.mix) s.mix = defaultState().mix;
+  if (!s.bpm) s.bpm = 100;
+  if (!s.sections.some(x => x.id === s.currentId)) s.currentId = s.sections[0].id;
+  idSeq = 0;
+  s.sections.forEach(x => {
+    const n = parseInt(String(x.id).replace("sec", ""), 10);
+    if (n > idSeq) idSeq = n;
+  });
+  return s;
+}
+
+let state = normalizeState(loadState());
 
 const currentSection = () => state.sections.find(s => s.id === state.currentId) || state.sections[0];
 
@@ -66,17 +69,25 @@ function save() {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
     try {
-      localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+      localStorage.setItem(Accounts.songKey(), JSON.stringify(state));
       if (saveStatus) saveStatus.textContent = "сохранено: только что";
     } catch (e) { /* нет места — не критично */ }
   }, 400);
 }
 function loadState() {
   try {
-    const raw = localStorage.getItem(SAVE_KEY);
+    const raw = localStorage.getItem(Accounts.songKey());
     return raw ? JSON.parse(raw) : null;
   } catch (e) { return null; }
 }
+
+/* смена аккаунта — подгружаем его песню */
+Accounts.onChange(() => {
+  stopPlay();
+  state = normalizeState(loadState());
+  renderAll();
+  applyMix();
+});
 
 /* ============ микшер ============ */
 function applyMix() {
@@ -510,6 +521,7 @@ async function exportWav() {
     a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 5000);
     btn.textContent = "✅ Готово!";
+    if (Accounts.current) Accounts.earn(5);
     setTimeout(() => { btn.textContent = old; btn.classList.remove("busy"); }, 1800);
   } catch (err) {
     console.error(err);
@@ -604,7 +616,7 @@ $("#btnRename").addEventListener("click", () => {
 $("#btnExport").addEventListener("click", exportWav);
 $("#btnSave").addEventListener("click", () => {
   try {
-    localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+    localStorage.setItem(Accounts.songKey(), JSON.stringify(state));
     saveStatus.textContent = "сохранено в браузер ✓";
   } catch (e) { saveStatus.textContent = "не удалось сохранить"; }
 });
@@ -621,7 +633,7 @@ $("#btnReset").addEventListener("click", () => {
   if (!confirm("Сбросить песню до примера?")) return;
   stopPlay();
   state = defaultState();
-  try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
+  try { localStorage.removeItem(Accounts.songKey()); } catch (e) {}
   renderAll();
   applyMix();
   saveStatus.textContent = "сброшено";
@@ -635,3 +647,48 @@ bindGrid(drumGrid);
 bindMixer();
 renderAll();
 applyMix();
+
+/* ============ API для ИИ-модуля и аккаунтов ============ */
+window.notePc = (name) => NOTE_BASE[name] % 12;
+window.MELODY_ROWS_META = MELODY_ROWS.map((n, idx) => ({
+  name: n, idx, pc: noteToMidi(n) % 12, midi: noteToMidi(n)
+}));
+window.zerosLike = () => zeros(MELODY_ROWS.length, STEPS);
+window.zerosDrums = () => zeros(DRUM_KEYS.length, STEPS);
+
+window.SoundSmith = {
+  currentSection,
+  renderAll,
+  save,
+  applyMix,
+  spend: (n, what) => Accounts.spend(n, what),
+
+  setBpm(v) {
+    state.bpm = Math.min(200, Math.max(60, Math.round(v)));
+    document.getElementById("bpm").value = state.bpm;
+    save();
+  },
+
+  makeAiSection(name, gen) {
+    const sec = makeSection(name, null, null);
+    if (gen) {
+      sec.melody = gen.melody;
+      sec.drums = gen.drums;
+    }
+    return sec;
+  },
+
+  addSections(arr) {
+    state.sections.push(...arr);
+    state.currentId = arr[arr.length - 1].id;
+    renderAll();
+    save();
+  },
+
+  replaceAllSections(arr) {
+    state.sections = arr;
+    state.currentId = arr[0].id;
+    renderAll();
+    save();
+  }
+};
